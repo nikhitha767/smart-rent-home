@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import OwnerFormPage from "./pages/OwnerFormPage";
 import DashboardPage from "./pages/DashboardPage";
 import PropertyDetailsPage from "./pages/PropertyDetailsPage";
+import OwnerDashboardPage from "./pages/OwnerDashboardPage";
 import MessagesPage from "./pages/MessagesPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="owner-form" element={<OwnerFormPage />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="property/:id" element={<PropertyDetailsPage />} />
+            <Route path="owner/:ownerId" element={<OwnerDashboardPage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="profile" element={<ProfilePage />} />
