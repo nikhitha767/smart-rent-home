@@ -25,10 +25,6 @@ import DashboardMessages from "./dashboard/DashboardMessages";
 import DashboardProfile from "./dashboard/DashboardProfile";
 import DashboardSettings from "./dashboard/DashboardSettings";
 
-interface UserDashboardProps {
-  onPropertyClick: (propertyId: string) => void;
-}
-
 const navigationItems = [
   { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
   { title: "Messages", icon: MessageSquare, id: "messages" },
@@ -100,18 +96,18 @@ const DashboardSidebar = ({ activeTab, setActiveTab }: { activeTab: string; setA
   );
 };
 
-const UserDashboard = ({ onPropertyClick }: UserDashboardProps) => {
+const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
 
-  const handleAddProperty = () => {
-    navigate("/owner-form");
+  const handleOwnerClick = (ownerId: string) => {
+    navigate(`/owner/${ownerId}`);
   };
 
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <DashboardOverview />;
+        return <DashboardOverview onOwnerClick={handleOwnerClick} />;
       case "messages":
         return <DashboardMessages />;
       case "profile":
@@ -119,7 +115,7 @@ const UserDashboard = ({ onPropertyClick }: UserDashboardProps) => {
       case "settings":
         return <DashboardSettings />;
       default:
-        return <DashboardOverview />;
+        return <DashboardOverview onOwnerClick={handleOwnerClick} />;
     }
   };
 
