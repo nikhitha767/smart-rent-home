@@ -9,6 +9,7 @@ import OwnerFormPage from "./pages/OwnerFormPage";
 import DashboardPage from "./pages/DashboardPage";
 import PropertyDetailsPage from "./pages/PropertyDetailsPage";
 import OwnerDashboardPage from "./pages/OwnerDashboardPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 import MessagesPage from "./pages/MessagesPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="property/:id" element={<PropertyDetailsPage />} />
             <Route path="owner/:ownerId" element={<OwnerDashboardPage />} />
+            <Route path="admin" element={<AdminDashboardPage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="profile" element={<ProfilePage />} />
