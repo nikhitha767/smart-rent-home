@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, Menu, X, User, LogOut, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
+import { Home, Menu, X, User, LogOut, LayoutDashboard, MessageSquare, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -59,7 +59,6 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
               </span>
             </button>
 
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-4">
               <Button
                 variant="ghost"
@@ -67,6 +66,14 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
                 className="text-foreground hover:text-primary hover:bg-primary/10"
               >
                 Become a House Owner
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/admin")}
+                className="text-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Admin
               </Button>
 
               {isLoggedIn ? (
@@ -166,6 +173,17 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
                   className="justify-start"
                 >
                   Become a House Owner
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    navigate("/admin");
+                    setIsMenuOpen(false);
+                  }}
+                  className="justify-start text-destructive"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Admin
                 </Button>
 
                 {isLoggedIn ? (
