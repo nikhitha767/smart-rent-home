@@ -1,4 +1,5 @@
 // Property store using localStorage for persistence
+import { getRatingsByProperty } from "./ratingStore";
 
 export interface Property {
   id: string;
@@ -17,7 +18,6 @@ export interface Property {
   description: string;
   image: string;
   isVerified: boolean;
-  rating: number;
   createdAt: string;
 }
 
@@ -37,7 +37,7 @@ export const getProperties = (): Property[] => {
 };
 
 export const addProperty = (
-  propertyData: Omit<Property, "id" | "isVerified" | "rating" | "createdAt" | "image">
+  propertyData: Omit<Property, "id" | "isVerified" | "createdAt" | "image">
 ): Property => {
   const properties = getProperties();
   const newProperty: Property = {
@@ -45,7 +45,6 @@ export const addProperty = (
     id: Date.now().toString(),
     image: defaultImages[propertyData.propertyType] || defaultImages.house,
     isVerified: true, // AI verified
-    rating: 4.5 + Math.random() * 0.5, // Random rating between 4.5-5.0
     createdAt: new Date().toISOString(),
   };
   properties.push(newProperty);
@@ -55,6 +54,17 @@ export const addProperty = (
 
 export const getPropertyById = (id: string): Property | undefined => {
   return getProperties().find((p) => p.id === id);
+};
+
+export const getPropertyRating = (propertyId: string): number => {
+  const ratings = getRatingsByProperty(propertyId);
+  if (ratings.length === 0) return 0;
+  const sum = ratings.reduce((acc, r) => acc + r.rating, 0);
+  return Math.round((sum / ratings.length) * 10) / 10;
+};
+
+export const getPropertyRatingCount = (propertyId: string): number => {
+  return getRatingsByProperty(propertyId).length;
 };
 
 export const getPropertiesByType = (type: string): Property[] => {
