@@ -54,10 +54,10 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-12">
+    <div className="min-h-screen bg-background pt-24 pb-12 flex items-center justify-center">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="mb-8 animate-fade-up">
+        <div className="mb-8 animate-fade-up text-center">
           <Button
             variant="ghost"
             onClick={onBack}
@@ -67,7 +67,7 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
             Back to Home
           </Button>
 
-          <div className="max-w-2xl">
+          <div className="max-w-2xl mx-auto">
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">
               List Your Property
             </h1>
@@ -79,9 +79,9 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
         </div>
 
         {/* Form - Single Card */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="flex justify-center">
           <div 
-            className={`bg-card rounded-2xl p-6 md:p-8 shadow-card max-w-2xl transition-all duration-500 ease-out ${
+            className={`bg-card rounded-2xl p-6 md:p-8 shadow-card w-full max-w-2xl transition-all duration-500 ease-out ${
               isVisible 
                 ? "opacity-100 scale-100 translate-y-0" 
                 : "opacity-0 scale-90 translate-y-8"
