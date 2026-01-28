@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
+import { Home, Menu, X, User, LogOut, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -65,37 +65,54 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="outline"
-                      className="flex items-center gap-2 border-primary/30 hover:border-primary"
+                      variant="ghost"
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-full"
                     >
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-4 h-4 text-primary" />
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center relative">
+                        <span className="text-primary-foreground font-bold text-sm">P</span>
+                        <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold px-1 rounded">
+                          PRO
+                        </div>
                       </div>
-                      <span>My Account</span>
+                      <span className="font-medium text-foreground max-w-[120px] truncate">
+                        nikhithaphan...
+                      </span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-card border-border">
-                    <DropdownMenuItem
-                      onClick={() => onNavigate("profile")}
-                      className="cursor-pointer"
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      Profile
-                    </DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="w-64 bg-card border-border rounded-xl p-2">
+                    {/* User Info Header */}
+                    <div className="px-3 py-2 mb-2">
+                      <p className="text-sm text-muted-foreground">nikhithaphanisri@gmail.com</p>
+                    </div>
+                    <DropdownMenuSeparator className="my-1" />
                     <DropdownMenuItem
                       onClick={() => onNavigate("dashboard")}
-                      className="cursor-pointer"
+                      className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-lg"
                     >
-                      <LayoutDashboard className="w-4 h-4 mr-2" />
-                      Dashboard
+                      <User className="w-5 h-5 text-muted-foreground" />
+                      <span>Dashboard</span>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onNavigate("messages")}
+                      className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                    >
+                      <MessageSquare className="w-5 h-5 text-muted-foreground" />
+                      <span>Messages</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onNavigate("settings")}
+                      className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                    >
+                      <Settings className="w-5 h-5 text-muted-foreground" />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="my-1" />
                     <DropdownMenuItem
                       onClick={onLogout}
-                      className="cursor-pointer text-destructive"
+                      className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-lg text-destructive"
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
+                      <LogOut className="w-5 h-5" />
+                      <span>Sign Out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
