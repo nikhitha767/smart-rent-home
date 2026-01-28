@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import UserBookingConfirmations from "./UserBookingConfirmations";
 
 const states = [
   { id: "karnataka", name: "Karnataka", cities: ["Bangalore", "Mysore", "Mangalore"] },
@@ -186,6 +187,9 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
           <p className="text-muted-foreground">Find properties by location and type</p>
         </div>
       </div>
+
+      {/* Booking Confirmations */}
+      <UserBookingConfirmations />
 
       {/* Search Form */}
       <Card className="mb-8 bg-card">

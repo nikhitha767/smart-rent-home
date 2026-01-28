@@ -10,13 +10,15 @@ import {
   Home,
   Users,
   Bath,
-  Maximize
+  Maximize,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -26,6 +28,8 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { addBookingRequest } from "@/stores/bookingStore";
+import OwnerRequests from "@/components/owner/OwnerRequests";
 
 const ownerDetails: Record<string, {
   id: string;
@@ -201,9 +205,24 @@ const OwnerDashboardPage = () => {
 
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Add booking request to store
+    addBookingRequest({
+      ownerId: owner.id,
+      ownerName: owner.name,
+      propertyName: owner.propertyName,
+      propertyImage: owner.image,
+      userName: bookingData.name,
+      userEmail: bookingData.email,
+      userPhone: bookingData.phone,
+      moveInDate: bookingData.moveInDate,
+      duration: bookingData.duration,
+      message: bookingData.message,
+    });
+
     toast({
-      title: "Booking Request Sent!",
-      description: `Your booking request for ${owner.propertyName} has been sent to ${owner.name}. They will contact you soon.`,
+      title: "Booking Request Sent! ✓",
+      description: `Your booking request for ${owner.propertyName} has been sent to ${owner.name}. Check the owner's Requests tab to see your pending request.`,
     });
     setBookingData({
       name: "",
@@ -228,233 +247,259 @@ const OwnerDashboardPage = () => {
           Back to Search
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Property Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Image Gallery */}
-            <Card className="overflow-hidden">
-              <div className="relative h-80 md:h-96">
-                <img 
-                  src={owner.images[selectedImage]} 
-                  alt={owner.propertyName}
-                  className="w-full h-full object-cover"
-                />
-                {owner.isVerified && (
-                  <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1">
-                    <BadgeCheck className="w-4 h-4" />
-                    Verified Property
+        {/* Tabs for Property Details and Requests */}
+        <Tabs defaultValue="property" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+            <TabsTrigger value="property" className="flex items-center gap-2">
+              <Home className="w-4 h-4" />
+              Property Details
+            </TabsTrigger>
+            <TabsTrigger value="requests" className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4" />
+              Requests
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="property">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column - Property Details */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Image Gallery */}
+                <Card className="overflow-hidden">
+                  <div className="relative h-80 md:h-96">
+                    <img 
+                      src={owner.images[selectedImage]} 
+                      alt={owner.propertyName}
+                      className="w-full h-full object-cover"
+                    />
+                    {owner.isVerified && (
+                      <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1">
+                        <BadgeCheck className="w-4 h-4" />
+                        Verified Property
+                      </div>
+                    )}
                   </div>
-                )}
+                  {owner.images.length > 1 && (
+                    <div className="flex gap-2 p-4">
+                      {owner.images.map((img, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedImage(index)}
+                          className={`w-20 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                            selectedImage === index ? "border-primary" : "border-transparent"
+                          }`}
+                        >
+                          <img src={img} alt="" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+
+                {/* Property Info */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-2xl font-serif">{owner.propertyName}</CardTitle>
+                        <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                          <MapPin className="w-4 h-4" />
+                          <span>{owner.location}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-primary">₹{owner.rent.toLocaleString()}</p>
+                        <p className="text-sm text-muted-foreground">per month</p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Stats */}
+                    <div className="grid grid-cols-4 gap-4">
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <Home className="w-5 h-5 mx-auto mb-1 text-primary" />
+                        <p className="font-semibold">{owner.type}</p>
+                        <p className="text-xs text-muted-foreground">Type</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <Users className="w-5 h-5 mx-auto mb-1 text-primary" />
+                        <p className="font-semibold">{owner.bedrooms}</p>
+                        <p className="text-xs text-muted-foreground">Bedrooms</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <Bath className="w-5 h-5 mx-auto mb-1 text-primary" />
+                        <p className="font-semibold">{owner.bathrooms}</p>
+                        <p className="text-xs text-muted-foreground">Bathrooms</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted rounded-lg">
+                        <Maximize className="w-5 h-5 mx-auto mb-1 text-primary" />
+                        <p className="font-semibold">{owner.area}</p>
+                        <p className="text-xs text-muted-foreground">Sq. Ft.</p>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <h3 className="font-semibold mb-2">Description</h3>
+                      <p className="text-muted-foreground">{owner.description}</p>
+                    </div>
+
+                    {/* Amenities */}
+                    <div>
+                      <h3 className="font-semibold mb-2">Amenities</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {owner.amenities.map((amenity) => (
+                          <span 
+                            key={amenity}
+                            className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                          >
+                            {amenity}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Owner Info */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Property Owner</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl">
+                        {owner.name.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{owner.name}</h3>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                          <span>{owner.rating} rating</span>
+                          <span className="mx-2">•</span>
+                          <span>{owner.properties} properties</span>
+                        </div>
+                        <div className="flex gap-4 mt-2">
+                          <a href={`tel:${owner.phone}`} className="flex items-center gap-1 text-sm text-primary hover:underline">
+                            <Phone className="w-4 h-4" />
+                            {owner.phone}
+                          </a>
+                          <a href={`mailto:${owner.email}`} className="flex items-center gap-1 text-sm text-primary hover:underline">
+                            <Mail className="w-4 h-4" />
+                            {owner.email}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              {owner.images.length > 1 && (
-                <div className="flex gap-2 p-4">
-                  {owner.images.map((img, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`w-20 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                        selectedImage === index ? "border-primary" : "border-transparent"
-                      }`}
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </Card>
 
-            {/* Property Info */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-2xl font-serif">{owner.propertyName}</CardTitle>
-                    <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      <span>{owner.location}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-primary">₹{owner.rent.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">per month</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Stats */}
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <Home className="w-5 h-5 mx-auto mb-1 text-primary" />
-                    <p className="font-semibold">{owner.type}</p>
-                    <p className="text-xs text-muted-foreground">Type</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <Users className="w-5 h-5 mx-auto mb-1 text-primary" />
-                    <p className="font-semibold">{owner.bedrooms}</p>
-                    <p className="text-xs text-muted-foreground">Bedrooms</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <Bath className="w-5 h-5 mx-auto mb-1 text-primary" />
-                    <p className="font-semibold">{owner.bathrooms}</p>
-                    <p className="text-xs text-muted-foreground">Bathrooms</p>
-                  </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <Maximize className="w-5 h-5 mx-auto mb-1 text-primary" />
-                    <p className="font-semibold">{owner.area}</p>
-                    <p className="text-xs text-muted-foreground">Sq. Ft.</p>
-                  </div>
-                </div>
+              {/* Right Column - Booking Form */}
+              <div className="lg:col-span-1">
+                <Card className="sticky top-24">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      Book This Property
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleBookingSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Your Name</Label>
+                        <Input 
+                          placeholder="Enter your name"
+                          value={bookingData.name}
+                          onChange={(e) => setBookingData({...bookingData, name: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input 
+                          type="email"
+                          placeholder="Enter your email"
+                          value={bookingData.email}
+                          onChange={(e) => setBookingData({...bookingData, email: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Phone</Label>
+                        <Input 
+                          type="tel"
+                          placeholder="Enter your phone number"
+                          value={bookingData.phone}
+                          onChange={(e) => setBookingData({...bookingData, phone: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Move-in Date</Label>
+                        <Input 
+                          type="date"
+                          value={bookingData.moveInDate}
+                          onChange={(e) => setBookingData({...bookingData, moveInDate: e.target.value})}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Duration</Label>
+                        <Select 
+                          value={bookingData.duration} 
+                          onValueChange={(value) => setBookingData({...bookingData, duration: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card border-border z-50">
+                            <SelectItem value="6">6 Months</SelectItem>
+                            <SelectItem value="12">12 Months</SelectItem>
+                            <SelectItem value="24">24 Months</SelectItem>
+                            <SelectItem value="36">36 Months</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Message (Optional)</Label>
+                        <Textarea 
+                          placeholder="Any specific requirements or questions?"
+                          value={bookingData.message}
+                          onChange={(e) => setBookingData({...bookingData, message: e.target.value})}
+                          rows={3}
+                        />
+                      </div>
+                      
+                      <Button type="submit" className="w-full">
+                        Send Booking Request
+                      </Button>
+                      
+                      <p className="text-xs text-muted-foreground text-center">
+                        The owner will contact you within 24-48 hours
+                      </p>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
 
-                {/* Description */}
-                <div>
-                  <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-muted-foreground">{owner.description}</p>
-                </div>
-
-                {/* Amenities */}
-                <div>
-                  <h3 className="font-semibold mb-2">Amenities</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {owner.amenities.map((amenity) => (
-                      <span 
-                        key={amenity}
-                        className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                      >
-                        {amenity}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Owner Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Property Owner</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl">
-                    {owner.name.charAt(0)}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{owner.name}</h3>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                      <span>{owner.rating} rating</span>
-                      <span className="mx-2">•</span>
-                      <span>{owner.properties} properties</span>
-                    </div>
-                    <div className="flex gap-4 mt-2">
-                      <a href={`tel:${owner.phone}`} className="flex items-center gap-1 text-sm text-primary hover:underline">
-                        <Phone className="w-4 h-4" />
-                        {owner.phone}
-                      </a>
-                      <a href={`mailto:${owner.email}`} className="flex items-center gap-1 text-sm text-primary hover:underline">
-                        <Mail className="w-4 h-4" />
-                        {owner.email}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column - Booking Form */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-24">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-primary" />
-                  Book This Property
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleBookingSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Your Name</Label>
-                    <Input 
-                      placeholder="Enter your name"
-                      value={bookingData.name}
-                      onChange={(e) => setBookingData({...bookingData, name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input 
-                      type="email"
-                      placeholder="Enter your email"
-                      value={bookingData.email}
-                      onChange={(e) => setBookingData({...bookingData, email: e.target.value})}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Phone</Label>
-                    <Input 
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={bookingData.phone}
-                      onChange={(e) => setBookingData({...bookingData, phone: e.target.value})}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Move-in Date</Label>
-                    <Input 
-                      type="date"
-                      value={bookingData.moveInDate}
-                      onChange={(e) => setBookingData({...bookingData, moveInDate: e.target.value})}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Duration</Label>
-                    <Select 
-                      value={bookingData.duration} 
-                      onValueChange={(value) => setBookingData({...bookingData, duration: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select duration" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border-border z-50">
-                        <SelectItem value="6">6 Months</SelectItem>
-                        <SelectItem value="12">12 Months</SelectItem>
-                        <SelectItem value="24">24 Months</SelectItem>
-                        <SelectItem value="36">36 Months</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Message (Optional)</Label>
-                    <Textarea 
-                      placeholder="Any specific requirements or questions?"
-                      value={bookingData.message}
-                      onChange={(e) => setBookingData({...bookingData, message: e.target.value})}
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <Button type="submit" className="w-full">
-                    Send Booking Request
-                  </Button>
-                  
-                  <p className="text-xs text-muted-foreground text-center">
-                    The owner will contact you within 24-48 hours
-                  </p>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+          <TabsContent value="requests">
+            <div className="max-w-2xl">
+              <OwnerRequests 
+                ownerId={owner.id} 
+                ownerName={owner.name} 
+                propertyName={owner.propertyName} 
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
