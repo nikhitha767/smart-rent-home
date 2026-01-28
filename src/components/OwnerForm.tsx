@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { addProperty } from "@/stores/propertyStore";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -46,11 +48,37 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const { toast } = useToast();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
+    // Save property to store
+    addProperty({
+      ownerName: formData.ownerName,
+      phone: formData.phone,
+      propertyType: formData.propertyType,
+      propertyName: formData.propertyName,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      rent: Number(formData.rent),
+      securityDeposit: Number(formData.securityDeposit),
+      bedrooms: Number(formData.bedrooms),
+      bathrooms: Number(formData.bathrooms),
+      area: Number(formData.area),
+      description: formData.description,
+    });
+
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
+    
+    toast({
+      title: "Property Listed!",
+      description: "Your property has been submitted for AI verification.",
+    });
+    
     onSubmit();
   };
 

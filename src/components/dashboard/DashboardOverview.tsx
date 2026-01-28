@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { 
   Menu,
   Search,
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import UserBookingConfirmations from "./UserBookingConfirmations";
+import { getProperties, Property } from "@/stores/propertyStore";
 
 const states = [
   { id: "karnataka", name: "Karnataka", cities: ["Bangalore", "Mysore", "Mangalore"] },
@@ -60,92 +62,31 @@ const propertyTypes = [
   { id: "villa", label: "Villas", icon: Castle },
 ];
 
-const sampleOwners = [
-  {
-    id: "1",
-    name: "Raj Kumar",
-    propertyName: "Sunrise Apartments",
-    type: "Apartment",
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
-    rent: 25000,
-    location: "Koramangala, Bangalore",
-    isVerified: true,
-    rating: 4.8,
-    properties: 3,
-  },
-  {
-    id: "2",
-    name: "Priya Sharma",
-    propertyName: "Green Valley Villa",
-    type: "Villa",
-    image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800",
-    rent: 75000,
-    location: "Whitefield, Bangalore",
-    isVerified: true,
-    rating: 4.9,
-    properties: 2,
-  },
-  {
-    id: "3",
-    name: "Amit Verma",
-    propertyName: "City Heights",
-    type: "House",
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
-    rent: 35000,
-    location: "Indiranagar, Bangalore",
-    isVerified: true,
-    rating: 4.6,
-    properties: 1,
-  },
-  {
-    id: "4",
-    name: "Meera Patel",
-    propertyName: "Student's Haven PG",
-    type: "PG",
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
-    rent: 8000,
-    location: "HSR Layout, Bangalore",
-    isVerified: false,
-    rating: 4.3,
-    properties: 5,
-  },
-  {
-    id: "5",
-    name: "Suresh Reddy",
-    propertyName: "Lake View Apartment",
-    type: "Apartment",
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
-    rent: 45000,
-    location: "Electronic City, Bangalore",
-    isVerified: true,
-    rating: 4.7,
-    properties: 4,
-  },
-  {
-    id: "6",
-    name: "Anita Desai",
-    propertyName: "Modern Studio PG",
-    type: "PG",
-    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800",
-    rent: 12000,
-    location: "Koramangala, Bangalore",
-    isVerified: true,
-    rating: 4.5,
-    properties: 2,
-  },
-];
-
 interface DashboardOverviewProps {
   onOwnerClick?: (ownerId: string) => void;
 }
 
 const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
+  const [searchParams] = useSearchParams();
   const [selectedState, setSelectedState] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
-  const [filteredOwners, setFilteredOwners] = useState(sampleOwners);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+
+  // Check for type from URL params (from category buttons)
+  useEffect(() => {
+    const typeFromUrl = searchParams.get("type");
+    if (typeFromUrl) {
+      setSelectedType(typeFromUrl);
+      // Auto-search with just the type
+      const properties = getProperties();
+      const filtered = properties.filter((p) => p.propertyType === typeFromUrl);
+      setFilteredProperties(filtered);
+      setHasSearched(true);
+    }
+  }, [searchParams]);
 
   const availableCities = states.find((s) => s.id === selectedState)?.cities || [];
   const availableAreas = selectedCity ? cityAreas[selectedCity] || [] : [];
@@ -155,15 +96,22 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
   const handleSearch = () => {
     if (!isFormComplete) return;
     
-    // Filter owners based on selected type
-    const filtered = sampleOwners.filter((owner) => {
-      if (selectedType && owner.type.toLowerCase() !== selectedType) {
+    // Get properties from store and filter
+    const properties = getProperties();
+    const filtered = properties.filter((property) => {
+      if (selectedType && property.propertyType !== selectedType) {
+        return false;
+      }
+      if (selectedState && property.state.toLowerCase().replace("-", "") !== selectedState.replace("-", "")) {
+        return false;
+      }
+      if (selectedCity && property.city.toLowerCase() !== selectedCity.toLowerCase()) {
         return false;
       }
       return true;
     });
     
-    setFilteredOwners(filtered);
+    setFilteredProperties(filtered);
     setHasSearched(true);
   };
 
@@ -311,67 +259,67 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
               Available Properties
             </h2>
             <p className="text-muted-foreground text-sm">
-              {filteredOwners.length} owner{filteredOwners.length !== 1 ? 's' : ''} found
+              {filteredProperties.length} propert{filteredProperties.length !== 1 ? 'ies' : 'y'} found
             </p>
           </div>
 
-          {filteredOwners.length > 0 ? (
+          {filteredProperties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredOwners.map((owner) => (
+              {filteredProperties.map((property) => (
                 <Card 
-                  key={owner.id}
+                  key={property.id}
                   className="bg-card overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                  onClick={() => handleOwnerClick(owner.id)}
+                  onClick={() => handleOwnerClick(property.id)}
                 >
                   <div className="relative h-48">
                     <img 
-                      src={owner.image} 
-                      alt={owner.propertyName}
+                      src={property.image} 
+                      alt={property.propertyName}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-3 right-3">
-                      {owner.isVerified && (
+                      {property.isVerified && (
                         <div className="bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                           <BadgeCheck className="w-3 h-3" />
-                          Verified
+                          AI Verified
                         </div>
                       )}
                     </div>
                     <div className="absolute bottom-3 left-3">
-                      <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium">
-                        {owner.type}
+                      <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium capitalize">
+                        {property.propertyType}
                       </div>
                     </div>
                   </div>
                   
                   <CardContent className="p-4">
                     <h3 className="font-semibold text-foreground text-lg mb-1">
-                      {owner.propertyName}
+                      {property.propertyName}
                     </h3>
                     
                     <div className="flex items-center gap-1 text-muted-foreground text-sm mb-2">
                       <MapPin className="w-4 h-4" />
-                      <span>{owner.location}</span>
+                      <span>{property.address}, {property.city}</span>
                     </div>
                     
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="font-medium text-foreground">{owner.rating}</span>
+                        <span className="font-medium text-foreground">{property.rating.toFixed(1)}</span>
                       </div>
                       <span className="text-primary font-bold">
-                        ₹{owner.rent.toLocaleString()}/mo
+                        ₹{property.rent.toLocaleString()}/mo
                       </span>
                     </div>
                     
                     <div className="flex items-center justify-between pt-3 border-t border-border">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                          {owner.name.charAt(0)}
+                          {property.ownerName.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-foreground">{owner.name}</p>
-                          <p className="text-xs text-muted-foreground">{owner.properties} properties</p>
+                          <p className="text-sm font-medium text-foreground">{property.ownerName}</p>
+                          <p className="text-xs text-muted-foreground">{property.bedrooms} bed • {property.bathrooms} bath</p>
                         </div>
                       </div>
                       <Button size="sm" variant="outline">
