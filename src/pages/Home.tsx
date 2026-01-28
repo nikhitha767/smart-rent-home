@@ -14,7 +14,7 @@ const Home = () => {
   return (
     <>
       <Hero onNavigate={handleNavigate} />
-      <CategoryButtons onCategorySelect={() => navigate("/dashboard")} />
+      <CategoryButtons onCategorySelect={(category) => navigate(`/dashboard?type=${category}`)} />
       <HowItWorks />
       <Footer />
     </>

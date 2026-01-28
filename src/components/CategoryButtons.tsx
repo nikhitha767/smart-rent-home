@@ -1,34 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Home, Building2, Users, Castle } from "lucide-react";
+import { getPropertyTypeCounts } from "@/stores/propertyStore";
 
-const categories = [
+const categoryConfig = [
   {
-    id: "houses",
+    id: "house",
     label: "Houses",
     icon: Home,
     description: "Independent houses with gardens",
-    count: 125,
+    countKey: "houses",
   },
   {
-    id: "apartments",
+    id: "apartment",
     label: "Apartments",
     icon: Building2,
     description: "Modern flats in prime locations",
-    count: 230,
+    countKey: "apartments",
   },
   {
-    id: "pgs",
+    id: "pg",
     label: "PGs",
     icon: Users,
     description: "Paying guest accommodations",
-    count: 180,
+    countKey: "pgs",
   },
   {
-    id: "villas",
+    id: "villa",
     label: "Villas",
     icon: Castle,
     description: "Luxury villas with amenities",
-    count: 45,
+    countKey: "villas",
   },
 ];
 
@@ -38,6 +39,16 @@ interface CategoryButtonsProps {
 
 const CategoryButtons = ({ onCategorySelect }: CategoryButtonsProps) => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [counts, setCounts] = useState<Record<string, number>>({
+    houses: 0,
+    apartments: 0,
+    pgs: 0,
+    villas: 0,
+  });
+
+  useEffect(() => {
+    setCounts(getPropertyTypeCounts());
+  }, []);
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId === activeCategory ? null : categoryId);
@@ -55,11 +66,11 @@ const CategoryButtons = ({ onCategorySelect }: CategoryButtonsProps) => {
           </p>
         </div>
 
-        {/* Category Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {categories.map((category, index) => {
+          {categoryConfig.map((category, index) => {
             const Icon = category.icon;
             const isActive = activeCategory === category.id;
+            const count = counts[category.countKey] || 0;
 
             return (
               <button
@@ -105,7 +116,6 @@ const CategoryButtons = ({ onCategorySelect }: CategoryButtonsProps) => {
                   {category.description}
                 </p>
 
-                {/* Count Badge */}
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors duration-300 ${
                     isActive
@@ -113,7 +123,7 @@ const CategoryButtons = ({ onCategorySelect }: CategoryButtonsProps) => {
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {category.count} available
+                  {count} available
                 </span>
 
                 {/* Active Indicator */}
