@@ -5,10 +5,10 @@ import CategoryButtons from "@/components/CategoryButtons";
 import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
 import OwnerForm from "@/components/OwnerForm";
-import Dashboard from "@/components/Dashboard";
+import UserDashboard from "@/components/UserDashboard";
 import PropertyDetails from "@/components/PropertyDetails";
 
-type PageType = "home" | "owner-form" | "dashboard" | "property-details" | "profile";
+type PageType = "home" | "owner-form" | "dashboard" | "property-details" | "profile" | "messages" | "settings";
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState<PageType>("home");
@@ -50,13 +50,31 @@ const Index = () => {
           />
         );
       case "dashboard":
-        return <Dashboard onPropertyClick={handlePropertyClick} />;
+        return <UserDashboard onPropertyClick={handlePropertyClick} />;
       case "property-details":
         return (
           <PropertyDetails
             propertyId={selectedPropertyId || "1"}
             onBack={() => handleNavigate("dashboard")}
           />
+        );
+      case "messages":
+        return (
+          <div className="min-h-screen bg-background pt-24 pb-12">
+            <div className="container mx-auto px-4">
+              <h1 className="text-3xl font-serif font-bold text-foreground mb-4">Messages</h1>
+              <p className="text-muted-foreground">Messages page coming soon...</p>
+            </div>
+          </div>
+        );
+      case "settings":
+        return (
+          <div className="min-h-screen bg-background pt-24 pb-12">
+            <div className="container mx-auto px-4">
+              <h1 className="text-3xl font-serif font-bold text-foreground mb-4">Settings</h1>
+              <p className="text-muted-foreground">Settings page coming soon...</p>
+            </div>
+          </div>
         );
       case "profile":
         return (
