@@ -29,6 +29,7 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
     city: "",
     state: "",
     rent: "",
+    securityDeposit: "",
     bedrooms: "",
     bathrooms: "",
     area: "",
@@ -202,19 +203,35 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
                     />
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="rent">Monthly Rent (₹)</Label>
-                  <div className="relative">
-                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="rent"
-                      type="number"
-                      placeholder="25000"
-                      value={formData.rent}
-                      onChange={(e) => handleChange("rent", e.target.value)}
-                      className="pl-10 input-field"
-                      required
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="rent">Monthly Rent (₹)</Label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="rent"
+                        type="number"
+                        placeholder="25000"
+                        value={formData.rent}
+                        onChange={(e) => handleChange("rent", e.target.value)}
+                        className="pl-10 input-field"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="securityDeposit">Security Deposit (₹)</Label>
+                    <div className="relative">
+                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="securityDeposit"
+                        type="number"
+                        placeholder="50000"
+                        value={formData.securityDeposit}
+                        onChange={(e) => handleChange("securityDeposit", e.target.value)}
+                        className="pl-10 input-field"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
