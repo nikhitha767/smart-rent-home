@@ -37,9 +37,8 @@ const Hero = ({ onNavigate }: HeroProps) => {
 
           {/* Title */}
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-primary-foreground mb-4 animate-fade-up animation-delay-100">
-            Find Your Perfect
-            <span className="block text-primary">Rental Home</span>
-            With AI Trust
+            Find Your Perfect <span className="text-primary">Rental Home</span>
+            <span className="block">With AI Trust</span>
           </h1>
 
           {/* Description */}
