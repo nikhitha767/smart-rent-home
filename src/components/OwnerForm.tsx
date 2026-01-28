@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Upload, Home, MapPin, Phone, User, FileText, IndianRupee, Bed, Bath, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ interface OwnerFormProps {
 
 const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [formData, setFormData] = useState({
     ownerName: "",
     phone: "",
@@ -33,6 +34,12 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
     area: "",
     description: "",
   });
+
+  useEffect(() => {
+    // Trigger zoom-in animation after component mounts
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -75,7 +82,14 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
         <form onSubmit={handleSubmit} className="max-w-4xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Owner Information */}
-            <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-100">
+            <div 
+              className={`bg-card rounded-2xl p-6 shadow-card transition-all duration-500 ease-out ${
+                isVisible 
+                  ? "opacity-100 scale-100 translate-y-0" 
+                  : "opacity-0 scale-75 translate-y-8"
+              }`}
+              style={{ transitionDelay: "100ms" }}
+            >
               <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
                 Owner Information
@@ -126,7 +140,14 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
             </div>
 
             {/* Property Details */}
-            <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-200">
+            <div 
+              className={`bg-card rounded-2xl p-6 shadow-card transition-all duration-500 ease-out ${
+                isVisible 
+                  ? "opacity-100 scale-100 translate-y-0" 
+                  : "opacity-0 scale-75 translate-y-8"
+              }`}
+              style={{ transitionDelay: "200ms" }}
+            >
               <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
                 <Home className="w-5 h-5 text-primary" />
                 Property Details
@@ -227,7 +248,14 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
             </div>
 
             {/* Location */}
-            <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-300">
+            <div 
+              className={`bg-card rounded-2xl p-6 shadow-card transition-all duration-500 ease-out ${
+                isVisible 
+                  ? "opacity-100 scale-100 translate-y-0" 
+                  : "opacity-0 scale-75 translate-y-8"
+              }`}
+              style={{ transitionDelay: "300ms" }}
+            >
               <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-primary" />
                 Location
@@ -288,7 +316,14 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
             </div>
 
             {/* Description & Images */}
-            <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-400">
+            <div 
+              className={`bg-card rounded-2xl p-6 shadow-card transition-all duration-500 ease-out ${
+                isVisible 
+                  ? "opacity-100 scale-100 translate-y-0" 
+                  : "opacity-0 scale-75 translate-y-8"
+              }`}
+              style={{ transitionDelay: "400ms" }}
+            >
               <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
                 Description & Images
@@ -323,7 +358,14 @@ const OwnerForm = ({ onBack, onSubmit }: OwnerFormProps) => {
           </div>
 
           {/* Submit Button */}
-          <div className="mt-8 flex justify-end gap-4 animate-fade-up animation-delay-500">
+          <div 
+            className={`mt-8 flex justify-end gap-4 transition-all duration-500 ease-out ${
+              isVisible 
+                ? "opacity-100 scale-100 translate-y-0" 
+                : "opacity-0 scale-90 translate-y-4"
+            }`}
+            style={{ transitionDelay: "500ms" }}
+          >
             <Button type="button" variant="outline" onClick={onBack} className="px-8">
               Cancel
             </Button>
