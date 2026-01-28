@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import UserBookingConfirmations from "./UserBookingConfirmations";
-import { getProperties, Property } from "@/stores/propertyStore";
+import { getProperties, Property, getPropertyRating, getPropertyRatingCount } from "@/stores/propertyStore";
 
 const states = [
   { id: "karnataka", name: "Karnataka", cities: ["Bangalore", "Mysore", "Mangalore"] },
@@ -305,7 +305,16 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="font-medium text-foreground">{property.rating.toFixed(1)}</span>
+                        <span className="font-medium text-foreground">
+                          {getPropertyRating(property.id) > 0 
+                            ? getPropertyRating(property.id).toFixed(1) 
+                            : "New"}
+                        </span>
+                        {getPropertyRatingCount(property.id) > 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            ({getPropertyRatingCount(property.id)})
+                          </span>
+                        )}
                       </div>
                       <span className="text-primary font-bold">
                         ₹{property.rent.toLocaleString()}/mo
