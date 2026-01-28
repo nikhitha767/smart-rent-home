@@ -14,7 +14,7 @@ const Hero = ({ onNavigate }: HeroProps) => {
         <img
           src={heroImage}
           alt="Beautiful modern home"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover blur-[2px]"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-charcoal/80 via-charcoal/60 to-charcoal/40" />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/50 via-transparent to-transparent" />
