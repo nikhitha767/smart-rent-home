@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   MessageSquare, 
-  FolderOpen, 
   User, 
   Settings, 
   HelpCircle
@@ -23,7 +22,6 @@ import {
 } from "@/components/ui/sidebar";
 import DashboardOverview from "./dashboard/DashboardOverview";
 import DashboardMessages from "./dashboard/DashboardMessages";
-import DashboardPortfolio from "./dashboard/DashboardPortfolio";
 import DashboardProfile from "./dashboard/DashboardProfile";
 import DashboardSettings from "./dashboard/DashboardSettings";
 
@@ -34,7 +32,6 @@ interface UserDashboardProps {
 const navigationItems = [
   { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
   { title: "Messages", icon: MessageSquare, id: "messages" },
-  { title: "Portfolio", icon: FolderOpen, id: "portfolio" },
   { title: "Profile", icon: User, id: "profile" },
   { title: "Settings", icon: Settings, id: "settings" },
 ];
@@ -117,8 +114,6 @@ const UserDashboard = ({ onPropertyClick }: UserDashboardProps) => {
         return <DashboardOverview />;
       case "messages":
         return <DashboardMessages />;
-      case "portfolio":
-        return <DashboardPortfolio onAddProperty={handleAddProperty} />;
       case "profile":
         return <DashboardProfile />;
       case "settings":
