@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Home, Menu, X, User, LogOut, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,10 +16,10 @@ interface NavbarProps {
   isLoggedIn: boolean;
   onLogin: () => void;
   onLogout: () => void;
-  onNavigate: (page: string) => void;
 }
 
-const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
+const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
@@ -26,11 +27,18 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
   const handleSignIn = () => {
     setShowSignIn(false);
     onLogin();
+    navigate("/dashboard");
   };
 
   const handleSignUp = () => {
     setShowSignUp(false);
     onLogin();
+    navigate("/dashboard");
+  };
+
+  const handleLogout = () => {
+    onLogout();
+    navigate("/");
   };
 
   return (
@@ -40,7 +48,7 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <button
-              onClick={() => onNavigate("home")}
+              onClick={() => navigate("/")}
               className="flex items-center gap-2 group"
             >
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center transition-transform group-hover:scale-105">
@@ -55,7 +63,7 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
             <div className="hidden md:flex items-center gap-4">
               <Button
                 variant="ghost"
-                onClick={() => onNavigate("owner-form")}
+                onClick={() => navigate("/owner-form")}
                 className="text-foreground hover:text-primary hover:bg-primary/10"
               >
                 Become a House Owner
@@ -86,21 +94,21 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
                     </div>
                     <DropdownMenuSeparator className="my-1" />
                     <DropdownMenuItem
-                      onClick={() => onNavigate("dashboard")}
+                      onClick={() => navigate("/dashboard")}
                       className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-lg"
                     >
                       <User className="w-5 h-5 text-muted-foreground" />
                       <span>Dashboard</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => onNavigate("messages")}
+                      onClick={() => navigate("/messages")}
                       className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-lg"
                     >
                       <MessageSquare className="w-5 h-5 text-muted-foreground" />
                       <span>Messages</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => onNavigate("settings")}
+                      onClick={() => navigate("/settings")}
                       className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-lg"
                     >
                       <Settings className="w-5 h-5 text-muted-foreground" />
@@ -108,7 +116,7 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="my-1" />
                     <DropdownMenuItem
-                      onClick={onLogout}
+                      onClick={handleLogout}
                       className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-lg text-destructive"
                     >
                       <LogOut className="w-5 h-5" />
@@ -152,7 +160,7 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    onNavigate("owner-form");
+                    navigate("/owner-form");
                     setIsMenuOpen(false);
                   }}
                   className="justify-start"
@@ -165,7 +173,7 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
                     <Button
                       variant="ghost"
                       onClick={() => {
-                        onNavigate("profile");
+                        navigate("/profile");
                         setIsMenuOpen(false);
                       }}
                       className="justify-start"
@@ -176,7 +184,7 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
                     <Button
                       variant="ghost"
                       onClick={() => {
-                        onNavigate("dashboard");
+                        navigate("/dashboard");
                         setIsMenuOpen(false);
                       }}
                       className="justify-start"
@@ -187,7 +195,7 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout, onNavigate }: NavbarProps) => {
                     <Button
                       variant="ghost"
                       onClick={() => {
-                        onLogout();
+                        handleLogout();
                         setIsMenuOpen(false);
                       }}
                       className="justify-start text-destructive"
