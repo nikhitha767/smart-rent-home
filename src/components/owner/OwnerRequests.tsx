@@ -2,22 +2,22 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ClipboardList, 
-  User, 
-  Mail, 
-  Phone, 
-  Calendar, 
+import {
+  ClipboardList,
+  User,
+  Mail,
+  Phone,
+  Calendar,
   Clock,
   CheckCircle,
   XCircle,
   MessageSquare
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { 
-  getRequestsByOwner, 
-  updateRequestStatus, 
-  BookingRequest 
+import {
+  getRequestsByOwner,
+  updateRequestStatus,
+  BookingRequest
 } from "@/stores/bookingStore";
 
 interface OwnerRequestsProps {
@@ -31,36 +31,49 @@ const OwnerRequests = ({ ownerId, ownerName, propertyName }: OwnerRequestsProps)
   const [selectedRequest, setSelectedRequest] = useState<BookingRequest | null>(null);
 
   useEffect(() => {
-    loadRequests();
+    // Set up real-time listener for booking requests
+    const unsubscribe = getRequestsByOwner(ownerId, (ownerRequests) => {
+      setRequests(ownerRequests);
+    });
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
   }, [ownerId]);
 
-  const loadRequests = () => {
-    const ownerRequests = getRequestsByOwner(ownerId);
-    setRequests(ownerRequests);
-  };
-
-  const handleApprove = (request: BookingRequest) => {
-    const updated = updateRequestStatus(request.id, "approved");
-    if (updated) {
+  const handleApprove = async (request: BookingRequest) => {
+    try {
+      await updateRequestStatus(request.id, "approved");
       toast({
         title: "Booking Approved! ✓",
         description: `You have approved the booking request from ${request.userName}. A confirmation has been sent to ${request.userEmail}.`,
       });
-      loadRequests();
       setSelectedRequest(null);
+    } catch (error) {
+      console.error("Error approving booking:", error);
+      toast({
+        title: "Error",
+        description: "Failed to approve booking. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleReject = (request: BookingRequest) => {
-    const updated = updateRequestStatus(request.id, "rejected");
-    if (updated) {
+  const handleReject = async (request: BookingRequest) => {
+    try {
+      await updateRequestStatus(request.id, "rejected");
       toast({
         title: "Booking Rejected",
         description: `The booking request from ${request.userName} has been rejected.`,
         variant: "destructive",
       });
-      loadRequests();
       setSelectedRequest(null);
+    } catch (error) {
+      console.error("Error rejecting booking:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reject booking. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -140,14 +153,14 @@ const OwnerRequests = ({ ownerId, ownerName, propertyName }: OwnerRequestsProps)
 
           {selectedRequest.status === "pending" && (
             <div className="flex gap-3 mt-6">
-              <Button 
+              <Button
                 onClick={() => handleApprove(selectedRequest)}
                 className="flex-1 bg-green-600 hover:bg-green-700"
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Approve Booking
               </Button>
-              <Button 
+              <Button
                 variant="destructive"
                 onClick={() => handleReject(selectedRequest)}
                 className="flex-1"
@@ -199,7 +212,7 @@ const OwnerRequests = ({ ownerId, ownerName, propertyName }: OwnerRequestsProps)
         ) : (
           <div className="space-y-3">
             {requests.map((request) => (
-              <div 
+              <div
                 key={request.id}
                 onClick={() => setSelectedRequest(request)}
                 className="p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
@@ -209,7 +222,10 @@ const OwnerRequests = ({ ownerId, ownerName, propertyName }: OwnerRequestsProps)
                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium text-sm">
                       {request.userName.charAt(0)}
                     </div>
-                    <span className="font-medium">{request.userName}</span>
+                    <div>
+                      <span className="font-medium block">{request.userName}</span>
+                      <span className="text-xs text-muted-foreground">for {request.propertyName}</span>
+                    </div>
                   </div>
                   {getStatusBadge(request.status)}
                 </div>

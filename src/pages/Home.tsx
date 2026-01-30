@@ -1,5 +1,6 @@
 import Hero from "@/components/Hero";
 import CategoryButtons from "@/components/CategoryButtons";
+import FeaturedProperties from "@/components/FeaturedProperties";
 import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,7 @@ const Home = () => {
     <>
       <Hero onNavigate={handleNavigate} />
       <CategoryButtons onCategorySelect={(category) => navigate(`/dashboard?type=${category}`)} />
+      <FeaturedProperties />
       <HowItWorks />
       <Footer />
     </>

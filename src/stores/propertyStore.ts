@@ -14,7 +14,8 @@ export interface Property {
   securityDeposit: number;
   bedrooms: number;
   bathrooms: number;
-  area: number;
+  area: number; // sqft
+  locality?: string; // Area name e.g. "Koramangala"
   description: string;
   image: string;
   isVerified: boolean;
@@ -77,7 +78,7 @@ export const getPropertiesByLocation = (
   type?: string
 ): Property[] => {
   let properties = getProperties();
-  
+
   if (state) {
     properties = properties.filter((p) => p.state.toLowerCase() === state.toLowerCase());
   }
@@ -87,7 +88,7 @@ export const getPropertiesByLocation = (
   if (type) {
     properties = properties.filter((p) => p.propertyType === type);
   }
-  
+
   return properties;
 };
 

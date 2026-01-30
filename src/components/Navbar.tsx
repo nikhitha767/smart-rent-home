@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, Menu, X, User, LogOut, LayoutDashboard, MessageSquare, Settings, Shield } from "lucide-react";
+import { Home, Menu, X, User as UserIcon, LogOut, LayoutDashboard, MessageSquare, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,16 +9,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import SignInModal from "./auth/SignInModal";
-import SignUpModal from "./auth/SignUpModal";
+import Login from "./auth/Login";
+import Signup from "./auth/Signup";
+import { User } from "firebase/auth";
 
 interface NavbarProps {
   isLoggedIn: boolean;
+  user?: User | null;
+  role?: string | null;
   onLogin: () => void;
   onLogout: () => void;
 }
 
-const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
+const Navbar = ({ isLoggedIn, user, role, onLogin, onLogout }: NavbarProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
@@ -27,18 +30,38 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
   const handleSignIn = () => {
     setShowSignIn(false);
     onLogin();
-    navigate("/dashboard");
   };
 
   const handleSignUp = () => {
     setShowSignUp(false);
     onLogin();
-    navigate("/dashboard");
   };
 
   const handleLogout = () => {
     onLogout();
     navigate("/");
+  };
+
+  // derive display name from email if displayName is missing
+  const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
+  const userInitial = displayName.charAt(0).toUpperCase();
+
+  const getDashboardRoute = () => {
+    if (role === 'admin') return '/admin';
+    if (role === 'owner') return '/owner/dashboard';
+    return '/dashboard';
+  };
+
+  const getBadge = () => {
+    if (role === 'admin') return <div className="absolute -bottom-1 -right-1 bg-destructive text-destructive-foreground text-[8px] font-bold px-1 rounded shadow-sm">ADMIN</div>;
+    if (role === 'owner') return <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-white text-[8px] font-bold px-1 rounded shadow-sm">PRO</div>;
+    return null;
+  };
+
+  const getAvatarBorder = () => {
+    if (role === 'admin') return 'border-2 border-destructive';
+    if (role === 'owner') return 'border-2 border-yellow-500';
+    return '';
   };
 
   return (
@@ -67,14 +90,6 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
               >
                 Become a House Owner
               </Button>
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/admin")}
-                className="text-foreground hover:text-destructive hover:bg-destructive/10"
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                Admin
-              </Button>
 
               {isLoggedIn ? (
                 <DropdownMenu>
@@ -83,28 +98,36 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
                       variant="ghost"
                       className="flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-full"
                     >
-                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center relative">
-                        <span className="text-primary-foreground font-bold text-sm">P</span>
-                        <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground text-[8px] font-bold px-1 rounded">
-                          PRO
-                        </div>
+                      <div className={`w-10 h-10 rounded-full bg-primary flex items-center justify-center relative ${getAvatarBorder()}`}>
+                        {user?.photoURL ? (
+                          <img
+                            src={user.photoURL}
+                            alt={displayName}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-primary-foreground font-bold text-sm">{userInitial}</span>
+                        )}
+                        {getBadge()}
                       </div>
                       <span className="font-medium text-foreground max-w-[120px] truncate">
-                        nikhithaphan...
+                        {displayName}
                       </span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64 bg-card border-border rounded-xl p-2">
                     {/* User Info Header */}
                     <div className="px-3 py-2 mb-2">
-                      <p className="text-sm text-muted-foreground">nikhithaphanisri@gmail.com</p>
+                      <p className="font-medium">{displayName}</p>
+                      <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
+                      <p className="text-xs text-muted-foreground capitalize mt-1 border-t border-border pt-1">Role: {role || 'Tenant'}</p>
                     </div>
                     <DropdownMenuSeparator className="my-1" />
                     <DropdownMenuItem
-                      onClick={() => navigate("/dashboard")}
+                      onClick={() => navigate(getDashboardRoute())}
                       className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-lg"
                     >
-                      <User className="w-5 h-5 text-muted-foreground" />
+                      <UserIcon className="w-5 h-5 text-muted-foreground" />
                       <span>Dashboard</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -174,20 +197,27 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
                 >
                   Become a House Owner
                 </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    navigate("/admin");
-                    setIsMenuOpen(false);
-                  }}
-                  className="justify-start text-destructive"
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  Admin
-                </Button>
 
                 {isLoggedIn ? (
                   <>
+                    <div className="px-4 py-2 flex items-center gap-3 border-b border-border/50 mb-2">
+                      <div className={`w-8 h-8 rounded-full bg-primary flex items-center justify-center relative ${getAvatarBorder()}`}>
+                        {user?.photoURL ? (
+                          <img
+                            src={user.photoURL}
+                            alt={displayName}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-primary-foreground font-bold text-xs">{userInitial}</span>
+                        )}
+                        {getBadge()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{displayName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                      </div>
+                    </div>
                     <Button
                       variant="ghost"
                       onClick={() => {
@@ -196,13 +226,13 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
                       }}
                       className="justify-start"
                     >
-                      <User className="w-4 h-4 mr-2" />
+                      <UserIcon className="w-4 h-4 mr-2" />
                       Profile
                     </Button>
                     <Button
                       variant="ghost"
                       onClick={() => {
-                        navigate("/dashboard");
+                        navigate(getDashboardRoute());
                         setIsMenuOpen(false);
                       }}
                       className="justify-start"
@@ -251,7 +281,7 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
         </div>
       </nav>
 
-      <SignInModal
+      <Login
         isOpen={showSignIn}
         onClose={() => setShowSignIn(false)}
         onSignIn={handleSignIn}
@@ -261,7 +291,7 @@ const Navbar = ({ isLoggedIn, onLogin, onLogout }: NavbarProps) => {
         }}
       />
 
-      <SignUpModal
+      <Signup
         isOpen={showSignUp}
         onClose={() => setShowSignUp(false)}
         onSignUp={handleSignUp}

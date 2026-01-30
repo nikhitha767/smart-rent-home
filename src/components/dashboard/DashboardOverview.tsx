@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { 
+import {
   Menu,
   Search,
   MapPin,
@@ -23,37 +23,11 @@ import {
 } from "@/components/ui/select";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import UserBookingConfirmations from "./UserBookingConfirmations";
-import { getProperties, Property, getPropertyRating, getPropertyRatingCount } from "@/stores/propertyStore";
+import { Property, getPropertyRating, getPropertyRatingCount } from "@/stores/propertyStore";
+import { collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase";
 
-const states = [
-  { id: "karnataka", name: "Karnataka", cities: ["Bangalore", "Mysore", "Mangalore"] },
-  { id: "maharashtra", name: "Maharashtra", cities: ["Mumbai", "Pune", "Nagpur"] },
-  { id: "tamil-nadu", name: "Tamil Nadu", cities: ["Chennai", "Coimbatore", "Madurai"] },
-  { id: "telangana", name: "Telangana", cities: ["Hyderabad", "Warangal", "Nizamabad"] },
-  { id: "delhi", name: "Delhi", cities: ["New Delhi", "Noida", "Gurgaon"] },
-  { id: "gujarat", name: "Gujarat", cities: ["Ahmedabad", "Surat", "Vadodara"] },
-];
-
-const cityAreas: Record<string, string[]> = {
-  Bangalore: ["Koramangala", "Indiranagar", "Whitefield", "HSR Layout", "Electronic City"],
-  Mumbai: ["Andheri", "Bandra", "Powai", "Juhu", "Thane"],
-  Chennai: ["T. Nagar", "Anna Nagar", "Adyar", "Velachery", "OMR"],
-  Hyderabad: ["Hitech City", "Gachibowli", "Banjara Hills", "Jubilee Hills", "Kondapur"],
-  Pune: ["Koregaon Park", "Hinjewadi", "Kothrud", "Viman Nagar", "Baner"],
-  Mysore: ["Vijayanagar", "Kuvempunagar", "Saraswathipuram"],
-  Mangalore: ["Hampankatta", "Kadri", "Bejai"],
-  Nagpur: ["Dharampeth", "Sitabuldi", "Civil Lines"],
-  Coimbatore: ["RS Puram", "Gandhipuram", "Saibaba Colony"],
-  Madurai: ["Anna Nagar", "KK Nagar", "Tallakulam"],
-  Warangal: ["Hanamkonda", "Kazipet", "Subedari"],
-  Nizamabad: ["Armoor Road", "Vinayak Nagar", "Dichpally"],
-  "New Delhi": ["Connaught Place", "Karol Bagh", "Dwarka"],
-  Noida: ["Sector 62", "Sector 18", "Sector 137"],
-  Gurgaon: ["DLF Phase 1", "Cyber City", "Sohna Road"],
-  Ahmedabad: ["Navrangpura", "Satellite", "Vastrapur"],
-  Surat: ["Adajan", "Vesu", "Athwa"],
-  Vadodara: ["Alkapuri", "Fatehgunj", "Manjalpur"],
-};
+import { locationData } from "../../services/locationData";
 
 const propertyTypes = [
   { id: "house", label: "Houses", icon: Home },
@@ -73,44 +47,78 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const [allProperties, setAllProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
+
+  // Fetch verified properties from Firestore
+  // Listen for verified properties from Firestore
+  useEffect(() => {
+    const q = query(collection(db, "properties"), where("status", "==", "approved"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const props = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property));
+      setAllProperties(props);
+    }, (error) => {
+      console.error("Error fetching properties:", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Check for type from URL params (from category buttons)
   useEffect(() => {
     const typeFromUrl = searchParams.get("type");
-    if (typeFromUrl) {
+    if (typeFromUrl && allProperties.length > 0) {
       setSelectedType(typeFromUrl);
       // Auto-search with just the type
-      const properties = getProperties();
-      const filtered = properties.filter((p) => p.propertyType === typeFromUrl);
+      const filtered = allProperties.filter((p) => p.propertyType === typeFromUrl);
       setFilteredProperties(filtered);
       setHasSearched(true);
     }
-  }, [searchParams]);
+  }, [searchParams, allProperties]);
 
-  const availableCities = states.find((s) => s.id === selectedState)?.cities || [];
-  const availableAreas = selectedCity ? cityAreas[selectedCity] || [] : [];
+  const availableCities = locationData.find((s) => s.id === selectedState)?.cities || [];
+  const availableAreas = selectedState && selectedCity
+    ? locationData.find(s => s.id === selectedState)?.cities.find(c => c.name === selectedCity)?.areas || []
+    : [];
 
-  const isFormComplete = selectedState && selectedCity && selectedArea && selectedType;
+  // Allow search if at least State and City are selected
+  const isFormComplete = selectedState && selectedCity;
 
   const handleSearch = () => {
-    if (!isFormComplete) return;
-    
-    // Get properties from store and filter
-    const properties = getProperties();
-    const filtered = properties.filter((property) => {
+    if (!isFormComplete) {
+      console.log("Search requires at least State and City");
+      return;
+    }
+
+    console.log("Searching with:", { selectedState, selectedCity, selectedArea, selectedType });
+    console.log("Total properties available:", allProperties.length);
+
+    // Filter from fetched allProperties
+    const filtered = allProperties.filter((property) => {
+      // Type filter (optional)
       if (selectedType && property.propertyType !== selectedType) {
         return false;
       }
-      if (selectedState && property.state.toLowerCase().replace("-", "") !== selectedState.replace("-", "")) {
+
+      // State filter (required)
+      if (selectedState && property.state !== selectedState) {
         return false;
       }
-      if (selectedCity && property.city.toLowerCase() !== selectedCity.toLowerCase()) {
+
+      // City filter (required)
+      if (selectedCity && property.city !== selectedCity) {
         return false;
       }
+
+      // Area/Locality filter (optional)
+      if (selectedArea && property.locality !== selectedArea) {
+        return false;
+      }
+
       return true;
     });
-    
+
+    console.log("Filtered properties:", filtered.length, filtered);
     setFilteredProperties(filtered);
     setHasSearched(true);
   };
@@ -146,7 +154,7 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
             <Search className="w-5 h-5 text-primary" />
             Search Properties
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* State */}
             <div className="space-y-2">
@@ -161,7 +169,7 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
                   <SelectValue placeholder="Select State" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border z-50">
-                  {states.map((state) => (
+                  {locationData.map((state) => (
                     <SelectItem key={state.id} value={state.id}>
                       {state.name}
                     </SelectItem>
@@ -187,8 +195,8 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border z-50">
                   {availableCities.map((city) => (
-                    <SelectItem key={city} value={city}>
-                      {city}
+                    <SelectItem key={city.name} value={city.name}>
+                      {city.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -240,8 +248,8 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
             </div>
           </div>
 
-          <Button 
-            onClick={handleSearch} 
+          <Button
+            onClick={handleSearch}
             disabled={!isFormComplete}
             className="w-full md:w-auto"
           >
@@ -266,19 +274,19 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
           {filteredProperties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProperties.map((property) => (
-                <Card 
+                <Card
                   key={property.id}
                   className="bg-card overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                   onClick={() => handleOwnerClick(property.id)}
                 >
                   <div className="relative h-48">
-                    <img 
-                      src={property.image} 
+                    <img
+                      src={property.image}
                       alt={property.propertyName}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-3 right-3">
-                      {property.isVerified && (
+                      {property.status === 'approved' && (
                         <div className="bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                           <BadgeCheck className="w-3 h-3" />
                           AI Verified
@@ -291,23 +299,23 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <CardContent className="p-4">
                     <h3 className="font-semibold text-foreground text-lg mb-1">
                       {property.propertyName}
                     </h3>
-                    
+
                     <div className="flex items-center gap-1 text-muted-foreground text-sm mb-2">
                       <MapPin className="w-4 h-4" />
                       <span>{property.address}, {property.city}</span>
                     </div>
-                    
+
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         <span className="font-medium text-foreground">
-                          {getPropertyRating(property.id) > 0 
-                            ? getPropertyRating(property.id).toFixed(1) 
+                          {getPropertyRating(property.id) > 0
+                            ? getPropertyRating(property.id).toFixed(1)
                             : "New"}
                         </span>
                         {getPropertyRatingCount(property.id) > 0 && (
@@ -320,7 +328,7 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
                         ₹{property.rent.toLocaleString()}/mo
                       </span>
                     </div>
-                    
+
                     <div className="flex items-center justify-between pt-3 border-t border-border">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">

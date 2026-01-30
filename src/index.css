@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -103,38 +104,35 @@
     font-family: 'Poppins', sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Playfair Display', serif;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium 
-           transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5
-           active:translate-y-0 active:shadow-md;
+    @apply bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-md;
   }
 
   .btn-outline {
-    @apply border-2 border-primary text-primary px-6 py-3 rounded-lg font-medium
-           transition-all duration-300 hover:bg-primary hover:text-primary-foreground
-           hover:shadow-lg hover:-translate-y-0.5;
+    @apply border-2 border-primary text-primary px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:shadow-lg hover:-translate-y-0.5;
   }
 
   .btn-ghost {
-    @apply text-foreground px-4 py-2 rounded-lg font-medium
-           transition-all duration-200 hover:bg-muted;
+    @apply text-foreground px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-muted;
   }
 
   .card-elevated {
-    @apply bg-card rounded-xl p-6 shadow-[var(--shadow-card)]
-           transition-all duration-300 hover:shadow-[var(--shadow-md)] hover:-translate-y-1;
+    @apply bg-card rounded-xl p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-md)] hover:-translate-y-1;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 rounded-lg border border-input bg-background
-           transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary
-           placeholder:text-muted-foreground;
+    @apply w-full px-4 py-3 rounded-lg border border-input bg-background transition-all duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-muted-foreground;
   }
 
   .section-title {
@@ -150,14 +148,11 @@
   }
 
   .verified-badge {
-    @apply inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-           bg-sage-light text-accent;
+    @apply inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-sage-light text-accent;
   }
 
   .category-chip {
-    @apply px-6 py-3 rounded-full font-medium transition-all duration-300
-           border-2 border-transparent cursor-pointer
-           hover:shadow-md hover:-translate-y-0.5;
+    @apply px-6 py-3 rounded-full font-medium transition-all duration-300 border-2 border-transparent cursor-pointer hover:shadow-md hover:-translate-y-0.5;
   }
 
   .category-chip-active {
@@ -194,11 +189,25 @@
     animation: scaleIn 0.3s ease-out forwards;
   }
 
-  .animation-delay-100 { animation-delay: 100ms; }
-  .animation-delay-200 { animation-delay: 200ms; }
-  .animation-delay-300 { animation-delay: 300ms; }
-  .animation-delay-400 { animation-delay: 400ms; }
-  .animation-delay-500 { animation-delay: 500ms; }
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
 
   .bg-sage-light {
     background-color: hsl(var(--sage-light));
@@ -206,8 +215,15 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 @keyframes fadeUp {
@@ -215,6 +231,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -222,8 +239,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInLeft {
@@ -231,6 +253,7 @@
     opacity: 0;
     transform: translateX(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -242,6 +265,7 @@
     opacity: 0;
     transform: translateX(30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -253,6 +277,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);

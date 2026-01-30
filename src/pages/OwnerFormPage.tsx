@@ -1,4 +1,4 @@
-import OwnerForm from "@/components/OwnerForm";
+import OwnerForm from "@/components/owner/OwnerForm";
 import { useNavigate } from "react-router-dom";
 
 const OwnerFormPage = () => {
@@ -7,7 +7,7 @@ const OwnerFormPage = () => {
   return (
     <OwnerForm
       onBack={() => navigate("/")}
-      onSubmit={() => navigate("/dashboard")}
+      onSubmit={() => navigate("/owner/dashboard")}
     />
   );
 };

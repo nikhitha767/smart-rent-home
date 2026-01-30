@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // DEVELOPMENT RULES - More permissive for testing
+    // Replace with stricter rules in production
+    
+    // Properties collection
+    match /properties/{propertyId} {
+      // Anyone can read
+      allow read: if true;
+      
+      // Authenticated users can create
+      allow create: if request.auth != null;
+      
+      // Authenticated users can update and delete
+      // (In production, restrict this to owners and admins only)
+      allow update, delete: if request.auth != null;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Bookings collection
+    match /bookings/{bookingId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Allow all authenticated users to read/write for development
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

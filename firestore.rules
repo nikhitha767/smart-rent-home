@@ -1,0 +1,65 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email != null &&
+             (request.auth.token.email == 'admin@rentai.com' || 
+              request.auth.token.email.matches('.*@admin\\.rentai\\.com'));
+    }
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Properties collection
+    match /properties/{propertyId} {
+      // Anyone can read approved properties
+      allow read: if resource.data.status == 'approved' || isAuthenticated();
+      
+      // Authenticated users can create properties
+      allow create: if isAuthenticated() && 
+                      request.resource.data.uid == request.auth.uid;
+      
+      // Property owners can update their own properties (but not status)
+      allow update: if isOwner(resource.data.uid) && 
+                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']);
+      
+      // Admins can update any property (including status)
+      allow update: if isAdmin();
+      
+      // Property owners and admins can delete
+      allow delete: if isOwner(resource.data.uid) || isAdmin();
+    }
+    
+    // Users collection (if you add it later)
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Bookings collection (if you add it later)
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+    
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
