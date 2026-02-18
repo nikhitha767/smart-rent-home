@@ -20,6 +20,8 @@ export interface Property {
   image: string;
   isVerified: boolean;
   createdAt: string;
+  images?: string[];
+  status?: string;
 }
 
 const STORAGE_KEY = "properties";

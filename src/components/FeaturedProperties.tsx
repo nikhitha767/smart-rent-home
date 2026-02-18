@@ -77,7 +77,7 @@ const FeaturedProperties = () => {
     }, []);
 
     const handleViewProperty = (propertyId: string) => {
-        navigate(`/owner/${propertyId}`);
+        navigate(`/property/${propertyId}`);
     };
 
     const handleViewAll = () => {

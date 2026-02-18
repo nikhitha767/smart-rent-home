@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  MessageSquare, 
-  User, 
-  Settings, 
+import {
+  LayoutDashboard,
+  MessageSquare,
+  User,
+  Settings,
   HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,13 +21,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import DashboardOverview from "./dashboard/DashboardOverview";
-import DashboardMessages from "./dashboard/DashboardMessages";
 import DashboardProfile from "./dashboard/DashboardProfile";
 import DashboardSettings from "./dashboard/DashboardSettings";
 
 const navigationItems = [
   { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
-  { title: "Messages", icon: MessageSquare, id: "messages" },
   { title: "Profile", icon: User, id: "profile" },
   { title: "Settings", icon: Settings, id: "settings" },
 ];
@@ -63,11 +61,10 @@ const DashboardSidebar = ({ activeTab, setActiveTab }: { activeTab: string; setA
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors cursor-pointer ${
-                      activeTab === item.id
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors cursor-pointer ${activeTab === item.id
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
                   >
                     <item.icon className="w-5 h-5" />
                     {!collapsed && <span>{item.title}</span>}
@@ -101,15 +98,13 @@ const UserDashboard = () => {
   const navigate = useNavigate();
 
   const handleOwnerClick = (ownerId: string) => {
-    navigate(`/owner/${ownerId}`);
+    navigate(`/property/${ownerId}`);
   };
 
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
         return <DashboardOverview onOwnerClick={handleOwnerClick} />;
-      case "messages":
-        return <DashboardMessages />;
       case "profile":
         return <DashboardProfile />;
       case "settings":

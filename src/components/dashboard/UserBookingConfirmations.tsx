@@ -3,34 +3,50 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Calendar, Clock, Star } from "lucide-react";
-import { getBookingRequests, BookingRequest } from "@/stores/bookingStore";
+import { getApprovedBookingsForUser, BookingRequest } from "@/stores/bookingStore";
 import { hasUserRatedBooking, getRatingByBooking } from "@/stores/ratingStore";
 import RatingForm from "@/components/RatingForm";
+import { auth } from "../../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const UserBookingConfirmations = () => {
   const [bookings, setBookings] = useState<BookingRequest[]>([]);
   const [ratedBookings, setRatedBookings] = useState<Set<string>>(new Set());
   const [selectedBooking, setSelectedBooking] = useState<BookingRequest | null>(null);
   const [showRatingForm, setShowRatingForm] = useState(false);
-
-  const loadBookings = () => {
-    const allBookings = getBookingRequests();
-    const approvedBookings = allBookings.filter(b => b.status === "approved");
-    setBookings(approvedBookings);
-    
-    // Check which bookings have been rated
-    const rated = new Set<string>();
-    approvedBookings.forEach(b => {
-      if (hasUserRatedBooking(b.id)) {
-        rated.add(b.id);
-      }
-    });
-    setRatedBookings(rated);
-  };
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    loadBookings();
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user && user.email) {
+        setUserEmail(user.email);
+      } else {
+        setUserEmail(null);
+        setBookings([]);
+      }
+    });
+
+    return () => unsubscribeAuth();
   }, []);
+
+  useEffect(() => {
+    if (!userEmail) return;
+
+    const unsubscribeBookings = getApprovedBookingsForUser(userEmail, (approvedBookings) => {
+      setBookings(approvedBookings);
+
+      // Check which bookings have been rated
+      const rated = new Set<string>();
+      approvedBookings.forEach(b => {
+        if (hasUserRatedBooking(b.id)) {
+          rated.add(b.id);
+        }
+      });
+      setRatedBookings(rated);
+    });
+
+    return () => unsubscribeBookings();
+  }, [userEmail]);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -46,7 +62,8 @@ const UserBookingConfirmations = () => {
   };
 
   const handleRatingSubmit = () => {
-    loadBookings();
+    // loadBookings(); // No need to reload, real-time listener handles updates if any
+    setShowRatingForm(false);
   };
 
   const getBookingRating = (bookingId: string) => {
@@ -72,15 +89,15 @@ const UserBookingConfirmations = () => {
             {bookings.map((booking) => {
               const isRated = ratedBookings.has(booking.id);
               const userRating = getBookingRating(booking.id);
-              
+
               return (
-                <div 
+                <div
                   key={booking.id}
                   className="p-4 bg-background rounded-lg border border-green-500/20"
                 >
                   <div className="flex items-start gap-4">
-                    <img 
-                      src={booking.propertyImage} 
+                    <img
+                      src={booking.propertyImage}
                       alt={booking.propertyName}
                       className="w-16 h-16 rounded-lg object-cover"
                     />
@@ -104,7 +121,7 @@ const UserBookingConfirmations = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-3 p-3 bg-green-500/10 rounded-md">
                     <p className="text-sm text-green-700">
                       🎉 Congratulations! Your booking has been approved. The owner will contact you at {booking.userEmail} with further details.
@@ -121,11 +138,10 @@ const UserBookingConfirmations = () => {
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Star
                                 key={star}
-                                className={`w-4 h-4 ${
-                                  star <= userRating
-                                    ? "fill-yellow-500 text-yellow-500"
-                                    : "text-muted-foreground"
-                                }`}
+                                className={`w-4 h-4 ${star <= userRating
+                                  ? "fill-yellow-500 text-yellow-500"
+                                  : "text-muted-foreground"
+                                  }`}
                               />
                             ))}
                           </div>

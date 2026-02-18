@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   MapPin,
@@ -15,68 +15,27 @@ import {
   Share2,
   ChevronLeft,
   ChevronRight,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { doc, getDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db, auth } from "../firebase";
+import { useToast } from "@/hooks/use-toast";
 
 interface PropertyDetailsProps {
   propertyId: string;
   onBack: () => void;
 }
 
-const propertyData = {
-  id: "1",
-  name: "Sunrise Apartments",
-  type: "Apartment",
-  images: [
-    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200",
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200",
-    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200",
-    "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200",
-  ],
-  rent: 25000,
-  deposit: 75000,
-  bedrooms: 2,
-  bathrooms: 2,
-  area: 1200,
-  location: "Koramangala, Bangalore",
-  address: "123, 4th Cross, Koramangala 4th Block, Bangalore - 560034",
-  owner: {
-    name: "Raj Kumar",
-    phone: "+91 98765 43210",
-    email: "raj.kumar@email.com",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
-    isVerified: true,
-    rating: 4.8,
-    responseTime: "Usually responds within 2 hours",
-  },
-  description:
-    "Beautiful 2BHK apartment in the heart of Koramangala. Fully furnished with modern amenities. Close to restaurants, shopping malls, and IT parks. Ideal for working professionals and families.",
-  amenities: [
-    "24/7 Security",
-    "Power Backup",
-    "Covered Parking",
-    "Gym",
-    "Swimming Pool",
-    "Clubhouse",
-    "Lift",
-    "Intercom",
-    "Fire Safety",
-    "CCTV",
-  ],
-  nearbyPlaces: [
-    { name: "Forum Mall", distance: "0.5 km" },
-    { name: "Metro Station", distance: "1.2 km" },
-    { name: "Hospital", distance: "0.8 km" },
-    { name: "School", distance: "1.0 km" },
-  ],
-};
-
 const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
+  const [property, setProperty] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const { toast } = useToast();
   const [bookingData, setBookingData] = useState({
     name: "",
     phone: "",
@@ -85,22 +44,126 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
     message: "",
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        const docRef = doc(db, "properties", propertyId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setProperty({ id: docSnap.id, ...docSnap.data() });
+        } else {
+          console.error("No such document!");
+          toast({
+            title: "Error",
+            description: "Property not found.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching property:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load property details.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (propertyId) {
+      fetchProperty();
+    }
+  }, [propertyId, toast]);
+
+
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % propertyData.images.length);
+    if (!property?.images?.length) return;
+    setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
   };
 
   const prevImage = () => {
+    if (!property?.images?.length) return;
     setCurrentImageIndex(
-      (prev) => (prev - 1 + propertyData.images.length) % propertyData.images.length
+      (prev) => (prev - 1 + property.images.length) % property.images.length
     );
   };
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
+  const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle booking submission
-    alert("Booking request submitted successfully!");
-    setIsBookingOpen(false);
+    setIsSubmitting(true);
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please login to book a property.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      const bookingRef = collection(db, "bookings");
+      await addDoc(bookingRef, {
+        propertyId: property.id,
+        propertyName: property.propertyName,
+        propertyImage: images[0] || "",
+        ownerId: property.uid || property.ownerUid || "",
+        ownerName: property.ownerName || "",
+        tenantId: user.uid,
+        userName: bookingData.name,
+        userPhone: bookingData.phone,
+        userEmail: bookingData.email,
+        moveInDate: bookingData.moveInDate,
+        message: bookingData.message,
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+
+      toast({
+        title: "Booking Requested",
+        description: "Your booking request has been sent to the owner.",
+      });
+      setIsBookingOpen(false);
+    } catch (error) {
+      console.error("Error submitting booking:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit booking request.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <p className="text-xl font-semibold">Property not found</p>
+        <Button onClick={onBack}>Back to Dashboard</Button>
+      </div>
+    );
+  }
+
+  // Helper to ensure images array exists
+  const images = property.images && property.images.length > 0
+    ? property.images
+    : property.image ? [property.image] : ["https://placehold.co/600x400?text=No+Image"];
+
 
   return (
     <div className="min-h-screen bg-background pt-20 pb-12">
@@ -123,39 +186,44 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
             {/* Image Gallery */}
             <div className="relative rounded-2xl overflow-hidden animate-fade-up">
               <img
-                src={propertyData.images[currentImageIndex]}
-                alt={propertyData.name}
+                src={images[currentImageIndex]}
+                alt={property.propertyName}
                 className="w-full h-[400px] md:h-[500px] object-cover"
               />
 
               {/* Navigation Arrows */}
-              <button
-                onClick={prevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
-              >
-                <ChevronLeft className="w-6 h-6 text-foreground" />
-              </button>
-              <button
-                onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
-              >
-                <ChevronRight className="w-6 h-6 text-foreground" />
-              </button>
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-foreground" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6 text-foreground" />
+                  </button>
+                </>
+              )}
 
               {/* Thumbnails */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {propertyData.images.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentImageIndex
+              {images.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {images.map((_: any, index: number) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-all ${index === currentImageIndex
                         ? "w-6 bg-primary"
                         : "bg-card/60"
-                    }`}
-                  />
-                ))}
-              </div>
+                        }`}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="absolute top-4 right-4 flex gap-2">
@@ -168,10 +236,10 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
               </div>
 
               {/* Verified Badge */}
-              {propertyData.owner.isVerified && (
-                <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent/90 backdrop-blur-sm text-xs font-medium text-accent-foreground flex items-center gap-1">
+              {property.status === 'approved' && (
+                <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-green-500/90 backdrop-blur-sm text-xs font-medium text-white flex items-center gap-1">
                   <Shield className="w-3 h-3" />
-                  AI Verified
+                  Verified
                 </span>
               )}
             </div>
@@ -180,26 +248,26 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
             <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-100">
               <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                 <div>
-                  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                    {propertyData.type}
+                  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium uppercase">
+                    {property.propertyType}
                   </span>
                   <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground mt-2">
-                    {propertyData.name}
+                    {property.propertyName}
                   </h1>
                   <div className="flex items-center gap-1 text-muted-foreground mt-2">
                     <MapPin className="w-4 h-4" />
-                    <span>{propertyData.address}</span>
+                    <span>{property.address}, {property.city}</span>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-bold text-primary">
-                      ₹{propertyData.rent.toLocaleString()}
+                      ₹{property.rent?.toLocaleString()}
                     </span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Deposit: ₹{propertyData.deposit.toLocaleString()}
+                    Deposit: ₹{property.securityDeposit?.toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -212,7 +280,7 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Bedrooms</p>
-                    <p className="font-semibold text-foreground">{propertyData.bedrooms}</p>
+                    <p className="font-semibold text-foreground">{property.bedrooms}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -221,7 +289,7 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Bathrooms</p>
-                    <p className="font-semibold text-foreground">{propertyData.bathrooms}</p>
+                    <p className="font-semibold text-foreground">{property.bathrooms}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -230,7 +298,7 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Area</p>
-                    <p className="font-semibold text-foreground">{propertyData.area} sqft</p>
+                    <p className="font-semibold text-foreground">{property.area || 0} sqft</p>
                   </div>
                 </div>
               </div>
@@ -238,43 +306,29 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
               {/* Description */}
               <div className="mt-6">
                 <h2 className="text-lg font-semibold text-foreground mb-3">About this property</h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  {propertyData.description}
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {property.description || "No description provided."}
                 </p>
               </div>
             </div>
 
             {/* Amenities */}
-            <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-200">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Amenities</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {propertyData.amenities.map((amenity, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 p-3 rounded-lg bg-muted/50"
-                  >
-                    <Check className="w-4 h-4 text-accent" />
-                    <span className="text-sm text-foreground">{amenity}</span>
-                  </div>
-                ))}
+            {property.amenities && property.amenities.length > 0 && (
+              <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-200">
+                <h2 className="text-lg font-semibold text-foreground mb-4">Amenities</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {property.amenities.map((amenity: string, index: number) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 p-3 rounded-lg bg-muted/50"
+                    >
+                      <Check className="w-4 h-4 text-accent" />
+                      <span className="text-sm text-foreground">{amenity}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* Nearby Places */}
-            <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-300">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Nearby Places</h2>
-              <div className="grid grid-cols-2 gap-4">
-                {propertyData.nearbyPlaces.map((place, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border"
-                  >
-                    <span className="text-foreground">{place.name}</span>
-                    <span className="text-sm text-muted-foreground">{place.distance}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -285,30 +339,38 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
                 <h2 className="text-lg font-semibold text-foreground mb-4">Property Owner</h2>
 
                 <div className="flex items-center gap-4 mb-4">
-                  <img
-                    src={propertyData.owner.image}
-                    alt={propertyData.owner.name}
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-xl font-bold uppercase overflow-hidden">
+                    {/* {property.ownerImage ? (
+                             <img
+                             src={property.ownerImage}
+                             alt={property.ownerName}
+                             className="w-full h-full object-cover"
+                           />
+                        ) : (
+                            property.ownerName?.[0] || "O"
+                        )} */}
+                    {property.ownerName?.[0] || "O"}
+                  </div>
+
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-foreground">
-                        {propertyData.owner.name}
+                        {property.ownerName || "Unknown Owner"}
                       </h3>
-                      {propertyData.owner.isVerified && (
+                      {property.status === 'approved' && (
                         <Shield className="w-4 h-4 text-accent" />
                       )}
                     </div>
-                    <div className="flex items-center gap-1 text-sm">
+                    {/* <div className="flex items-center gap-1 text-sm">
                       <Star className="w-4 h-4 fill-primary text-primary" />
-                      <span className="font-medium">{propertyData.owner.rating}</span>
+                      <span className="font-medium">4.8</span>
                       <span className="text-muted-foreground">rating</span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
-                <p className="text-sm text-muted-foreground mb-4">
-                  {propertyData.owner.responseTime}
+                <p className="text-sm text-muted-foreground mb-4 truncate" title={property.email}>
+                  Email: {property.email}
                 </p>
 
                 <div className="space-y-3">
@@ -330,12 +392,15 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
               {/* Location Map Placeholder */}
               <div className="bg-card rounded-2xl p-6 shadow-card animate-fade-up animation-delay-200">
                 <h2 className="text-lg font-semibold text-foreground mb-4">Location</h2>
-                <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-                  <MapPin className="w-8 h-8 text-muted-foreground" />
+                <div className="aspect-video rounded-lg bg-muted flex flex-col items-center justify-center p-4 text-center">
+                  <MapPin className="w-8 h-8 text-muted-foreground mb-2" />
+                  <p className="text-sm text-foreground font-medium">
+                    {property.address}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {property.city}, {property.state} {property.zipCode && `- ${property.zipCode}`}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground mt-3">
-                  {propertyData.location}
-                </p>
               </div>
             </div>
           </div>
@@ -356,7 +421,7 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
                 Book This Property
               </h2>
               <p className="text-muted-foreground mb-6">
-                Fill in your details to send a booking request
+                Fill in your details to send a booking request to {property.ownerName}
               </p>
 
               <form onSubmit={handleBookingSubmit} className="space-y-4">
@@ -440,8 +505,19 @@ const PropertyDetails = ({ propertyId, onBack }: PropertyDetailsProps) => {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex-1 btn-primary">
-                    Send Request
+                  <Button
+                    type="submit"
+                    className="flex-1 btn-primary"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Send Request"
+                    )}
                   </Button>
                 </div>
               </form>

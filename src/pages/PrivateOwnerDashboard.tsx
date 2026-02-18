@@ -33,6 +33,7 @@ import { Loader2 } from "lucide-react";
 import OwnerOverview from "@/components/owner/OwnerOverview";
 import OwnerProperties from "@/components/owner/OwnerProperties";
 import OwnerRequests from "@/components/owner/OwnerRequests";
+import OwnerSettings from "@/components/owner/OwnerSettings";
 
 // Define Property Interface locally or import if shared (keeping local for now to match established pattern)
 interface Property {
@@ -49,7 +50,6 @@ const navigationItems = [
     { title: "Overview", icon: LayoutDashboard, id: "overview" },
     { title: "My Properties", icon: Home, id: "properties" },
     { title: "Booking Requests", icon: ClipboardList, id: "requests" },
-    { title: "Tenants", icon: Users, id: "tenants" },
     { title: "Settings", icon: Settings, id: "settings" },
 ];
 
@@ -185,24 +185,10 @@ const PrivateOwnerDashboard = () => {
                 return <OwnerProperties properties={properties} />;
             case "requests":
                 return <OwnerRequests ownerId={user.uid} ownerName={user.displayName || "Owner"} propertyName="" />;
-            case "tenants":
-                // Placeholder for Tenants
-                return (
-                    <div className="text-center py-12">
-                        <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold">No Active Tenants</h3>
-                        <p className="text-muted-foreground">Once you approve bookings, your tenants will appear here.</p>
-                    </div>
-                );
+
             case "settings":
                 // Placeholder for Settings
-                return (
-                    <div className="text-center py-12">
-                        <Settings className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-semibold">Account Settings</h3>
-                        <p className="text-muted-foreground">Profile management features coming soon.</p>
-                    </div>
-                );
+                return <OwnerSettings />;
             default:
                 return <OwnerOverview totalProperties={properties.length} totalRequests={requestsCount} />;
         }

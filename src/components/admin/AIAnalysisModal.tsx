@@ -4,13 +4,21 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, XCircle, AlertTriangle, UserCheck, DollarSign, Activity } from "lucide-react";
 import { AIAnalysisResult } from "@/services/aiService";
-import { Property } from "@/stores/propertyStore";
+
+
+// Define a local interface that matches what we need, compatible with both Firestore and Store properties
+export interface AnalyzableProperty {
+    id: string;
+    propertyName: string;
+    ownerName: string;
+    [key: string]: any; // Allow other properties
+}
 
 interface AIAnalysisModalProps {
     isOpen: boolean;
     onClose: () => void;
     data: AIAnalysisResult | null;
-    property: Property | null;
+    property: AnalyzableProperty | null;
     onApprove: (id: string) => void;
     onReject: (id: string) => void;
     isProcessing: boolean;

@@ -14,6 +14,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -77,16 +78,19 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
   }, [searchParams, allProperties]);
 
   const availableCities = locationData.find((s) => s.id === selectedState)?.cities || [];
-  const availableAreas = selectedState && selectedCity
-    ? locationData.find(s => s.id === selectedState)?.cities.find(c => c.name === selectedCity)?.areas || []
-    : [];
 
-  // Allow search if at least State and City are selected
-  const isFormComplete = selectedState && selectedCity;
+
+  // Allow search if at least ONE filter is active
+  const isFormComplete = selectedState || selectedCity || selectedArea || selectedType;
 
   const handleSearch = () => {
     if (!isFormComplete) {
-      console.log("Search requires at least State and City");
+      // Ideally show all properties if search is clicked without filters, but sticking to "isFormComplete" for now.
+      // Actually, let's allow "Search" to show all if nothing selected? 
+      // User prompt implies "details filling after clock search property not displaying".
+      // Let's stick to requiring at least one input for now to avoid accidental "show all" overload, 
+      // but definitely relax the "State AND City" requirement.
+      console.log("Search requires at least one filter");
       return;
     }
 
@@ -100,19 +104,26 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
         return false;
       }
 
-      // State filter (required)
+      // State filter (optional)
       if (selectedState && property.state !== selectedState) {
         return false;
       }
 
-      // City filter (required)
+      // City filter (optional)
       if (selectedCity && property.city !== selectedCity) {
         return false;
       }
 
-      // Area/Locality filter (optional)
-      if (selectedArea && property.locality !== selectedArea) {
-        return false;
+      // Area/Locality filter (optional, partial match)
+      if (selectedArea) {
+        const areaFilter = selectedArea.toLowerCase();
+        const propertyLocality = (property.locality || "").toLowerCase();
+        const propertyAddress = (property.address || "").toLowerCase();
+
+        // Search in both locality and address
+        if (!propertyLocality.includes(areaFilter) && !propertyAddress.includes(areaFilter)) {
+          return false;
+        }
       }
 
       return true;
@@ -122,6 +133,8 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
     setFilteredProperties(filtered);
     setHasSearched(true);
   };
+
+
 
   const handleOwnerClick = (ownerId: string) => {
     if (onOwnerClick) {
@@ -205,26 +218,16 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
 
             {/* Area */}
             <div className="space-y-2">
-              <Label className="text-muted-foreground">Area</Label>
-              <Select
+              <Label className="text-muted-foreground">Area / Locality</Label>
+              <Input
+                placeholder="Enter area (e.g. Koramangala)"
                 value={selectedArea}
-                onValueChange={(value) => {
-                  setSelectedArea(value);
+                onChange={(e) => {
+                  setSelectedArea(e.target.value);
                   setHasSearched(false);
                 }}
-                disabled={!selectedCity}
-              >
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue placeholder="Select Area" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border z-50">
-                  {availableAreas.map((area) => (
-                    <SelectItem key={area} value={area}>
-                      {area}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="bg-background border-border"
+              />
             </div>
 
             {/* Property Type */}
@@ -281,7 +284,11 @@ const DashboardOverview = ({ onOwnerClick }: DashboardOverviewProps) => {
                 >
                   <div className="relative h-48">
                     <img
-                      src={property.image}
+                      src={
+                        property.image
+                          ? (Array.isArray(property.image) ? property.image[0] : property.image)
+                          : (property.images && property.images.length > 0 ? property.images[0] : "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800")
+                      }
                       alt={property.propertyName}
                       className="w-full h-full object-cover"
                     />
